@@ -1,0 +1,95 @@
+#import library yang akan digunakan
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sbs #membuat grafik ala seaborn
+import matplotlib.ticker as ticker
+
+#upload data yang akan diolah, pada program ini digunakan data "sampel"
+from google.colab import files
+uploaded = files.upload()
+
+#memanggil data yang telah di upload
+a = pd.read_excel('sampel.xlsx')
+
+a.head (20) #menampilkan 20 data pertama pada data "sampel"
+a.tail (15) #menampilkan 15 data terakhir pada data "sampel"
+a.describe() # analisis statistik desktiftif untuk data numerik
+
+#menghapus kolom row id karena tidak akan dianalisis
+a.drop ("Row ID", axis =1, inplace = True)
+
+#mengubah "order dates" untuk ke format pandas
+a["Order Date"] =pd.to_datetime(a["Order Date"], format= "%d/%m%/Y")
+
+#mengubah "Ship date" untuk ke format pandas
+a["Ship Date"] =pd.to_datetime(a["Ship Date"], format= "%d/%m%/Y")
+
+#untuk mengurutkan data berdasarkan data "order date" dari yang terlama hingga ke yang terbaru
+a.sort_values(by=["Order Date"], inplace= True, ascending= True)
+
+#mengecek data yang kosong
+#isnull untuk mencari data kosong
+#sum untuk menjumlahkan data yang kosong
+print(a.isnull().sum())
+
+#untuk menampilkan kolom tertentu gunakan "filter"
+a.filter(["Order ID", "Order Date", "Ship Date", "Ship Mode"])
+
+#data dgn keinginan data dgn nama darren dan pengiriman dgn standr class
+a.loc[((a['Customer Name']=='Darren Powers')&(a['Ship Mode']=='Standard Class'))]
+
+#menampilkan data tertentu dgn kriteria nama yg ada   dalam list bestparner
+b=["Patrick O'Donnell", 'Darren Powers']
+a.loc[a["Customer Name"].isin(b)]
+# isin berfungsi sebagai mengecek apakah ada data b di a
+
+#menampilkan unuk bagian bukan customer tapi ada dikota houstaon
+a.loc[(a["Segment"]!="Customer")&(a["City"]=="Houston")]
+
+#menampilkan rekap sales setiap customer menggunakan fungsi group by
+#group by dilakukan berdasarkan "customer name"
+#groupinh dilakukan pada kolom sales dan menjumlahkannya degan sum
+sc= a.groupby(['Customer Name'])['Sales'].sum()
+
+#proses groupinh sales per customer kemudian diurtutkan dari terkecil
+sc1=a.groupby(["Customer Name"])['Sales'].sum()
+sc1=sc1.sort_values(ascending=True)
+
+#proses groupinh sales per customer kemudian diurtutkan dari terbesar
+sc1=a.groupby(["Customer Name"])['Sales'].sum()
+sc1=sc1.sort_values(ascending=False)
+
+#menampilkan  20 customer yang palimng banyak salesnya
+# groupby sum: menggrupkan data per orang sekaligus di jumlahkan
+Top_customer=a.groupby(['Customer Name']).sum()
+
+#mengurutkan data sales dari yang terkecil
+Top_customer= Top_customer.sort_values ('Sales',ascending=False)
+
+# mengambil 20 data pertama
+Top_customer= Top_customer.head(20)
+
+#memformat agar nilai sales lbih rapi, yakni 2 digit dibelkang koma
+Top_customer= Top_customer[['Sales']].round(2)
+
+#memberi index pasa top-cutomer (buat nampilin)
+Top_customer.reset_index(inplace=True)
+Top_customer
+
+# width and height of figure is defined in inches
+plt.figure(figsize = (15,5)) #panjang dan tinggi grafik
+
+#menuliskan judul grafik dengan ukuran font 18
+plt.title("Most Valuable Customers (2015-2019)", fontsize=18)
+
+plt.bar(Top_customer["Customer Name"],
+        Top_customer["Sales"],color= '#99ff99',edgecolor='green',
+        linewidth = 1)
+plt.xlabel("Customers", fontsize=15) # x axis shows the customers
+plt.ylabel("Revenue",fontsize=15) # y axis shows the Revenue
+plt.xticks(fontsize=12, rotation=90)
+plt.yticks(fontsize=12)
+#To show the exact revenue generated on the figure
+for k,v in Top_customer["Sales"].items():
+    plt.text(k,v-8000,'$'+ str(v), fontsize=12,rotation=90,color='k',
+             horizontalalignment='center');
